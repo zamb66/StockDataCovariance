@@ -27,13 +27,8 @@ def main():
 			time_array_AAPL.append(i[1])
 			
 	time_array_AAPL.extend(time_array_AAPL)
-	Date_Column = pd.Series(time_array_AAPL)
-	#  Date_Column not being copied to the pandas dataframe below 
-	print(Date_Column)
-	stock_prices['Date'] = pd.DataFrame(Date_Column, index = stock_prices.index)
+	stock_prices['Date'] = time_array_AAPL
 	print(stock_prices) 
-	# The below line is returning everything in stock_prices['Date'] as null
-	print(stock_prices['Date'].isnull())
 	#month_separate(stock_prices)
 
 def month_separate(stock_prices):
