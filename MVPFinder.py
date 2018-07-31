@@ -5,20 +5,22 @@ import numpy as np
 import datetime 
 import calendar
 import math
+import time
+import scipy.stats as st
 
 def main():
 
-	start = datetime.date(2015, 7, 24)
-	end = datetime.date(2018, 7, 24)
+	program_start = time.time()
+	start = datetime.date(2018, 1, 1)
+	end = datetime.date(2018, 7, 26)
 
-	ticker = ['TSLA','GM']
+	ticker = ['TSLA','GM','F','NFLX','FB','PYPL','NVDA','V','GE','TWTR','CE','FIT','GPRO','XXII','GRPN','WMT','KO','COKE','BA','VZ']
 	volume = [0]
 	data_source = 'morningstar'
 	stock_data = []
 	close_price_columns = []
 	better_close_price_columns = []
 	final_close_price_columns = []
-	banana = 0
 	celery = []
 	cabbage = []
 	stock_matrix = []
@@ -26,40 +28,33 @@ def main():
 	individual_stock_std_dev = []
 	stock_std_devs = []
 	better_stock_std_devs = []
+	probability_positive_returns = []
 	muppet = 0
+	banana = 0
 	standard_deviation_portfolio = .01
 	
 	
 	
-	for i in ticker:
-		stock_prices_all = web.DataReader(i, data_source, start, end)
-		stock_prices = stock_prices_all.loc[-stock_prices_all['Volume'].isin(volume)]
-		stock_data.append(stock_prices)
-			
-	for b in stock_data:
-		close_price_columns.append(b['Close'])
-		banana = banana + 1
-		
-	for c in close_price_columns:
-		koala = c.reset_index()
-		better_close_price_columns.append(koala)
-		
-	for d in better_close_price_columns:
-		candy = d['Close']
-		final_close_price_columns.append(candy)
-		
-	for e in final_close_price_columns:
-		honey = e.values
-		cabbage.append(honey)
-		
-	for f in cabbage:
-		f = f/f[0]
-		celery.append(f)
-		
-	for g in celery:
-		period_return.append(g[-1])
-		
+	temp_stock_prices_all = web.DataReader(ticker, data_source, start, end)
+	stock_prices_all = temp_stock_prices_all.reset_index()
+	stock_prices = stock_prices_all.loc[-stock_prices_all['Volume'].isin(volume)]
+	stock_tickers = stock_prices['Symbol'].unique()
 	
+	for i in stock_tickers:
+		individual_stock_prices = stock_prices.loc[stock_prices['Symbol']==i] 
+		stock_data.append(individual_stock_prices)
+		close_price_columns.append(stock_data[banana]['Close'])
+		koala = close_price_columns[banana].reset_index()
+		candy = koala['Close']
+		final_close_price_columns.append(candy)
+		honey = final_close_price_columns[banana].values
+		cabbage.append(honey)
+		apple = cabbage[banana]
+		apple = (apple/apple[0])-1
+		celery.append(apple)
+		period_return.append(apple[-1])
+		print(period_return)
+		banana +=1
 
 	temp_stock_matrix = np.vstack(celery)
 	stock_matrix = temp_stock_matrix
@@ -78,7 +73,7 @@ def main():
 
 	
 	for item in stock_matrix:
-		h = item * weights[muppet]
+		h = item * equal_portfolio[muppet]
 		individual_stock_std_dev.append(h)
 		muppet +=1
 			
@@ -88,15 +83,21 @@ def main():
 	better_stock_std_devs = np.sum(stock_std_devs, axis = 0)
 	standard_deviation_portfolio = np.std(better_stock_std_devs, axis = 0)
 	total_MVP_return = np.dot(weights, period_return)
+	total_MVP_volatility = math.sqrt(1/standardizing_factor)
 	print("Return of MVP portfolio: " + str(total_MVP_return))
-	print("Volatility of MVP portfolio: " + str(math.sqrt(1/standardizing_factor)))
+	print("Volatility of MVP portfolio: " + str(total_MVP_volatility))
 	total_equal_return = np.dot(equal_portfolio, period_return)
 	print("Return of equally weighted portfolio: " + str(total_equal_return))
 	print("Volatility of equally weighted portfolio: " + str(standard_deviation_portfolio))
-	
-	
+	MVP_positive_probability = prob_positive(total_MVP_return, total_MVP_volatility)
+	Equal_positive_probability = prob_positive(total_equal_return, standard_deviation_portfolio)
+	print("Probability of positive returns of MVP portfolio: " + str(MVP_positive_probability))
+	print("Probability of positive returns of the equally weighted portfolio: " + str(Equal_positive_probability))
 
-	
+def prob_positive(calculated_mean, calculated_std):
+	probability_positive = 1-st.norm(calculated_mean, calculated_std).cdf(0)
+	return probability_positive
+		
 	
 if __name__ == "__main__":
 	main()
